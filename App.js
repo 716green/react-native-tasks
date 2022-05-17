@@ -1,53 +1,71 @@
 import { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Button,
-  TextInput,
-  Text,
-  ScrollView,
-} from "react-native";
-import { FlatList } from "react-native-web";
+import { StyleSheet, View, FlatList, Button } from "react-native";
+import TaskInput from "./components/TaskInput";
+import TaskItem from "./components/TaskItem";
+import { colors } from "./config/colors";
+import { StatusBar } from "expo-status-bar";
 
-export default function App() {
-  const [input, setInput] = useState("");
-  const [goals, setGoals] = useState([]);
+const App = () => {
+  const [tasks, setTasks] = useState([]);
+  const [modalIsActive, setModalIsActive] = useState(false);
 
-  const goalInputHandler = (value) => setInput(value);
+  const startAddGoalHandler = () => setModalIsActive(true);
+  const endAddGoalHandler = () => setModalIsActive(false);
 
-  const addGoalHandler = () => {
-    setGoals((current) => [...current, input]);
-    setInput("");
+  const addTaskHandler = (input) => {
+    setTasks((currentTasks) => [
+      ...currentTasks,
+      {
+        id: "item".concat(tasks.length.toString() || "0"),
+        text: input,
+      },
+    ]);
+    endAddGoalHandler();
+  };
+
+  const deleteGoalHandler = (id) => {
+    const newTasks = tasks.filter((task) => task.id !== id);
+    setTasks(newTasks);
   };
 
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={input}
-          style={styles.textInput}
-          placeholder="Course Goals"
-          onChangeText={goalInputHandler}
+    <>
+      <StatusBar style="light" />
+      <View style={styles.appContainer}>
+        <Button
+          title="Add Task"
+          color={colors.lightPurple}
+          onPress={startAddGoalHandler}
         />
-        <Button title="Add Goal" onPress={addGoalHandler} />
-      </View>
-      <View style={styles.goalsContainer}>
-        <FlatList alwaysBounceVertical={false}>
-          {goals.map((goal, i) => (
-            <View key={i} style={styles.goalItem}>
-              <Text style={styles.goalText}>{goal}</Text>
-            </View>
-          ))}
-        </FlatList>
-      </View>
-    </View>
-  );
-}
 
-const colors = {
-  white: "#ffffff",
-  gray: "#cccccc",
-  purple: "#5e0acc",
+        <TaskInput
+          modalIsActive={modalIsActive}
+          addTaskHandler={addTaskHandler}
+          setModalIsActive={setModalIsActive}
+          closeModal={endAddGoalHandler}
+        />
+
+        <View style={styles.tasksContainer}>
+          <FlatList
+            data={tasks}
+            renderItem={(itemData) => {
+              return (
+                <View style={styles.taskItem}>
+                  <TaskItem
+                    deleteGoalHandler={deleteGoalHandler}
+                    id={itemData.item.id}
+                    text={itemData.item.text}
+                  />
+                </View>
+              );
+            }}
+            keyExtractor={(item) => item.id}
+            alwaysBounceVertical={false}
+          />
+        </View>
+      </View>
+    </>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -56,32 +74,14 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 16,
   },
-  inputContainer: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: colors.gray,
-    width: "70%",
-    marginRight: 8,
-    padding: 8,
-  },
-  goalsContainer: {
+  tasksContainer: {
     flex: 5,
   },
-  goalItem: {
+  taskItem: {
     margin: 8,
-    padding: 8,
     borderRadius: 6,
-    backgroundColor: colors.purple,
-  },
-  goalText: {
-    color: colors.white,
+    backgroundColor: colors?.purple,
   },
 });
+
+export default App;
